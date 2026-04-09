@@ -1,4 +1,40 @@
 #ifndef __TMWP__H
 #define __TMWP__H
-
+namespace tmwp
+{
+class Request
+{
+public:
+char *method;
+char *resource;
+char isClientSideTechnologyResource;
+char *mimeType;
+int dataCount;
+char **data;
+};
+class Response
+{
+private:
+int clientSocketDescriptor;
+bool isClosed;
+bool headerCreated;
+void createHeader();
+public:
+Response(int clientSocketDescriptor);
+void write(const char *str);
+void close();
+};
+class TMWebProjector
+{
+private:
+int portNumber;
+char *url;
+void (*ptrOnRequest)(Request &,Response &);
+public:
+TMWebProjector(int portNumber);
+~TMWebProjector();
+void start();
+void onRequest(const char *url,void (*ptrOnRequest)(Request &,Response &));
+};
+}
 #endif
