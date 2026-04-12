@@ -278,6 +278,9 @@ if(bytesExtracted==0)
 {
 requestBuffer[bytesExtracted]='\0';
 Request *request=parseRequest(requestBuffer);
+
+while(1) // infinite loop to enable the forwarding feature
+{
 if(request->isClientSideTechnologyResource=='Y')
 {
 if(request->resource==NULL)
@@ -291,9 +294,11 @@ if(f!=NULL) printf("Sending index.html\n");
 }
 if(f==NULL)
 {
+printf("Sending 404 page\n");
 strcpy(responseBuffer,"HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length:163\nConnection: close\n\n<DOCTYPE HTML><html lang='en'><head><meta charset='utf-8'><title>TM Web Projector</title></head><body><h2 style='color:red'>Resource / not found</h2></body></html>");
 send(clientSocketDescriptor,responseBuffer,strlen(responseBuffer),0);
-printf("Sending 404 page\n");
+closesocket(clientSocketDescriptor);
+break;
 }
 else
 {
@@ -312,6 +317,8 @@ send(clientSocketDescriptor,responseBuffer,rc,0);
 i+=rc;
 }
 fclose(f);
+closesocket(clientSocketDescriptor);
+break;
 }
 }
 else
@@ -328,6 +335,8 @@ sprintf(tmp,"<DOCTYPE HTML><html lang='en'><head><meta charset='utf-8'><title>TM
 sprintf(responseBuffer,"HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length:%d\nConnection: close\n\n",strlen(tmp));
 strcat(responseBuffer,tmp);
 send(clientSocketDescriptor,responseBuffer,strlen(responseBuffer),0);
+closesocket(clientSocketDescriptor);
+break;
 }
 else
 {
@@ -347,6 +356,7 @@ i+=rc;
 }
 fclose(f);
 closesocket(clientSocketDescriptor);
+break;
 }
 }
 }
@@ -361,6 +371,8 @@ sprintf(tmp,"<DOCTYPE HTML><html lang='en'><head><meta charset='utf-8'><title>TM
 sprintf(responseBuffer,"HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length:%d\nConnection: close\n\n",strlen(tmp));
 strcat(responseBuffer,tmp);
 send(clientSocketDescriptor,responseBuffer,strlen(responseBuffer),0);
+closesocket(clientSocketDescriptor);
+break;
 }else
 {
 int ii=0;
@@ -369,11 +381,23 @@ if(strcmp(this->url+ii,request->resource)==0)
 {
 Response response(clientSocketDescriptor);
 this->ptrOnRequest(*request,response);
+
+// new code
+if(request->forwardTo.length()>0)
+{
+free(request->resource);
+request->resource=(char *)malloc((sizeof(char)*request->forwardTo.length())+1);
+strcpy(request->resource,request->forwardTo.c_str());
+request->isClientSideTechnologyResource=isClientSideTechnologyResource(request->resource);
+request->mimeType=getMIMEType(request->resource);
+continue;
+}
 if(request->data!=NULL)
 {
 for(int k=0;k<request->dataCount;k++) free(request->data[k]);
 free(request->data);
 }
+break;
 }
 else
 {
@@ -383,19 +407,14 @@ sprintf(tmp,"<DOCTYPE HTML><html lang='en'><head><meta charset='utf-8'><title>TM
 sprintf(responseBuffer,"HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length:%d\nConnection:close\n\n",strlen(tmp));
 strcat(responseBuffer,tmp);
 send(clientSocketDescriptor,responseBuffer,strlen(responseBuffer),0);
+closesocket(clientSocketDescriptor);
+break;
 }
 }
 }
+} // the infinite loop introduced because of the forwarding feature ends here
 }
 } // the infinite loop related to accept method ends here
-/*if(successCode>0)
-{
-printf("Response sent\n");
-}
-else
-{
-printf("Unable to send response\n");
-}*/
 closesocket(clientSocketDescriptor);
 closesocket(serverSocketDescriptor);
 WSACleanup();
