@@ -28,10 +28,23 @@ response.write("</body>");
 response.write("</html>");
 response.close();
 }
+
+void getCityView(Request &request,Response &response)
+{
+string cityCodeString=request.get("cityCode");
+int cityCode=atoi(cityCodeString.c_str());
+if(cityCode==1) request.forward((char *)"ujjain.html");
+else if(cityCode==2) request.forward((char *)"indore.html");
+else if(cityCode==3) request.forward((char *)"dewas.html");
+else request.forward((char *)"index.html");
+}
 int main()
 {
 TMWebProjector server(7070);
+
 server.onRequest("/now",dispatchTime);
+server.onRequest("/getCity",getCityView);
+
 server.start();
 return 0;
 }
