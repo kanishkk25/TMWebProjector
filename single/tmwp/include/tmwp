@@ -1,5 +1,7 @@
 #ifndef __TMWP__H
 #define __TMWP__H
+#include<iostream>
+using namespace std;
 namespace tmwp
 {
 class Request
