@@ -1,10 +1,24 @@
 #include<tmwp>
 #include<iostream>
+#include<string.h>
 using namespace tmwp;
 using namespace std;
 string Request::get(string name)
 {
-return string("1");
+string val;
+int i,e;
+for(i=0;i<this->dataCount;i++)
+{
+for(e=0;this->data[i][e]!='\0' && this->data[i][e]!='=';e++);
+if(this->data[i][e]!='=') continue;
+if(strncmp(this->data[i],name.c_str(),e)==0)
+{
+break;
+}
+}
+if(i==this->dataCount) val="";
+else val=string(this->data[i]+(e+1));
+return val;
 }
 void Request::forward(string forwardTo)
 {
