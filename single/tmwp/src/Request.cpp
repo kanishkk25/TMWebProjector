@@ -4,7 +4,7 @@
 using namespace tmwp;
 using namespace std;
 
-string Request::setKeyValue(string k,string v)
+void Request::setKeyValue(string k,string v)
 {
 // add the v against k in the keyValues map
 }
