@@ -33,6 +33,7 @@ void createHeader();
 public:
 Response(int clientSocketDescriptor);
 void write(const char *str);
+void write(string str);
 void close();
 };
 class TMWebProjector
