@@ -27,6 +27,10 @@ if(len==0) return;
 if(!this->headerCreated) this->createHeader();
 send(this->clientSocketDescriptor,str,len,0);
 }
+void Response::write(string str)
+{
+write(str.c_str());
+}
 void Response::close()
 {
 if(this->isClosed) return;
