@@ -3,6 +3,17 @@
 #include<string.h>
 using namespace tmwp;
 using namespace std;
+
+string Request::setKeyValue(string k,string v)
+{
+// add the v against k in the keyValues map
+}
+string Request::getValue(string k)
+{
+// find k in keyValues map,
+// if iterator is at end return string("")
+// else return whatever is the second part against the found pair
+}
 string Request::get(string name)
 {
 string val;
