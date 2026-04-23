@@ -196,23 +196,15 @@ return request;
 TMWebProjector::TMWebProjector(int portNumber)
 {
 this->portNumber=portNumber;
-this->url=NULL;
-this->ptrOnRequest=NULL;
 }
 TMWebProjector::~TMWebProjector()
 {
-if(this->url) delete [] this->url;
 }
 
-void TMWebProjector::onRequest(const char *url,void (*ptrOnRequest)(Request &,Response &))
+void TMWebProjector::onRequest(string url,void (*ptrOnRequest)(Request &,Response &))
 {
-if(this->url) delete [] this->url;
-this->url=NULL;
-this->ptrOnRequest=NULL;
-if(url==NULL || ptrOnRequest==NULL) return;
-this->url=new char[strlen(url)+1];
-strcpy(this->url,url);
-this->ptrOnRequest=ptrOnRequest;
+if(url.length()==0 || ptrOnRequest==NULL) return;
+requestMappings.insert(pair<string,void (*)(Request &,Response &)>(url,ptrOnRequest));
 }
 
 void TMWebProjector::start()
@@ -320,7 +312,7 @@ fclose(f);
 closesocket(clientSocketDescriptor);
 break;
 }
-}
+} // if request->resource==NULL ends
 else
 {
 f=fopen(request->resource,"rb");
@@ -358,12 +350,13 @@ fclose(f);
 closesocket(clientSocketDescriptor);
 break;
 }
-}
-}
+} // else of request->resource==NULL ends
+} // if(request->isClientSideTechnologyResource=='Y') ends
 else
 {
-//what to do in case of server side resource, is yet to be decided
-if(this->url==NULL || this->ptrOnRequest==NULL)
+map<string,void (*)(Request &,Response &)>::iterator iter;
+iter=requestMappings.find(string("/")+string(request->resource));
+if(iter==requestMappings.end())
 {
 printf("Seding 404 page\n");
 char tmp[501];
@@ -373,23 +366,20 @@ strcat(responseBuffer,tmp);
 send(clientSocketDescriptor,responseBuffer,strlen(responseBuffer),0);
 closesocket(clientSocketDescriptor);
 break;
-}else
-{
-int ii=0;
-if(this->url[0]=='/') ii=1;
-if(strcmp(this->url+ii,request->resource)==0)
+}
+else
 {
 Response response(clientSocketDescriptor);
-this->ptrOnRequest(*request,response);
-
-// new code
+iter->second(*request,response);
 if(request->forwardTo.length()>0)
 {
+printf("Yes %s\n",request->forwardTo.c_str());
 free(request->resource);
 request->resource=(char *)malloc((sizeof(char)*request->forwardTo.length())+1);
 strcpy(request->resource,request->forwardTo.c_str());
 request->isClientSideTechnologyResource=isClientSideTechnologyResource(request->resource);
 request->mimeType=getMIMEType(request->resource);
+request->forwardTo="";
 continue;
 }
 if(request->data!=NULL)
@@ -399,19 +389,7 @@ free(request->data);
 }
 break;
 }
-else
-{
-printf("Seding 404 page\n");
-char tmp[501];
-sprintf(tmp,"<DOCTYPE HTML><html lang='en'><head><meta charset='utf-8'><title>TM Web Projector</title></head><body><h2 style='color:red'>Resource /%s not found</h2></body></html>",request->resource);
-sprintf(responseBuffer,"HTTP/1.1 200 OK\nContent-Type:text/html\nContent-Length:%d\nConnection:close\n\n",strlen(tmp));
-strcat(responseBuffer,tmp);
-send(clientSocketDescriptor,responseBuffer,strlen(responseBuffer),0);
-closesocket(clientSocketDescriptor);
-break;
-}
-}
-}
+} // else of if(request->isClientSideTechnologyResource=='Y') ends
 } // the infinite loop introduced because of the forwarding feature ends here
 }
 } // the infinite loop related to accept method ends here
