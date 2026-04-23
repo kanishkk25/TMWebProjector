@@ -6,13 +6,14 @@ using namespace std;
 
 void Request::setKeyValue(string k,string v)
 {
-// add the v against k in the keyValues map
+keyValues.insert(pair<string,string>(k,v));
 }
 string Request::getValue(string k)
 {
-// find k in keyValues map,
-// if iterator is at end return string("")
-// else return whatever is the second part against the found pair
+map<string,string>::iterator iter;
+iter=keyValues.find(k);
+if(iter==keyValues.end()) return string("");
+return iter->second;
 }
 string Request::get(string name)
 {
