@@ -379,7 +379,10 @@ request->resource=(char *)malloc((sizeof(char)*request->forwardTo.length())+1);
 strcpy(request->resource,request->forwardTo.c_str());
 request->isClientSideTechnologyResource=isClientSideTechnologyResource(request->resource);
 request->mimeType=getMIMEType(request->resource);
-request->forwardTo="";
+
+request->forwardTo="";	// this line introduced because if the forwarded resource is 					// of server side technology then control will again come
+					// here and because of the continue it will go again at start 					// of the loop (that introduced because of forward feature
+					// and will create an infinite loop
 continue;
 }
 if(request->data!=NULL)
