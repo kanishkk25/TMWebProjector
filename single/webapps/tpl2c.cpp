@@ -15,17 +15,17 @@ if(e!=f) break;
 a++;
 b++;
 }
+if(e!=f) return e-f;
 return *a - *b;
 }
 int main(int c,char *v[])
 {
 if(c<2 || c>2)
 {
-printf("Some Error\n");
-printf("Usage : tpl2c file_name.tpl\n");
+printf("Invalid input\n");
+printf("Usage : [tpl2c file_name.tpl]\n");
 return 0;
 }
-
 char *fileName=v[1];
 int i=0;
 while(fileName[i]!='\0')
@@ -52,11 +52,6 @@ file_name[j]=fileName[j];
 file_name[j]='\0';
 printf("File name without extension : %s\n",file_name);
 
-string leftPart="response.write(\"";
-string rightPart="\");\n";
-string variableLeftPart="response.write(request.getValue(\"";
-string variableRightPart="\"));\n";
-
 FILE *f;
 FILE *newFile;
 f=fopen(fileName,"rb");
@@ -66,8 +61,25 @@ printf("File not found\n");
 return 0;
 }
 
+int file_size;
+fseek(f,0,SEEK_END);
+file_size=ftell(f);
+fseek(f,0,SEEK_SET);
+if(file_size==0)
+{
+printf("File is of zero length\n");
+fclose(f);
+return 0;
+}
+
+string leftPart="response.write(\"";
+string rightPart="\");\n";
+string variableLeftPart="response.write(request.getValue(\"";
+string variableRightPart="\"));\n";
+
 string newFileName=fileName;
 newFileName+=".cpp";
+
 newFile=fopen(newFileName.c_str(),"wb");
 
 char data[1001];
@@ -77,7 +89,7 @@ strcat(data,"#incliude<stdlib.h>\n");
 strcat(data,"#incliude<tmwp>\n");
 strcat(data,"#incliude<ctime>\n");
 strcat(data,"#incliude<iostream>\n");
-strcat(data,"using namesapce std;\n");
+strcat(data,"using namespace std;\n");
 
 fwrite(data,strlen(data),1,newFile);
 
@@ -88,18 +100,14 @@ strcat(data,"{\n");
 
 fwrite(data,strlen(data),1,newFile);
 
-int file_size;
-fseek(f,0,SEEK_END);
-file_size=ftell(f);
-fseek(f,0,SEEK_SET);
 int flag=0;
 int toRead;
 char m;
-
 int k=0;
 int s=0;
 char variable[21];
 char buffer[24];
+
 i=0;
 while(i<file_size)
 {
@@ -131,12 +139,9 @@ k++;
 else if(flag==2 && m=='}')
 {
 fwrite(variableLeftPart.c_str(),variableLeftPart.size(),1,newFile);
-
 variable[k]='\0';
 fwrite(variable,k,1,newFile);
-
 fwrite(variableRightPart.c_str(),variableRightPart.size(),1,newFile);
-
 k=0;
 flag=0;
 }
@@ -168,8 +173,6 @@ i=i+toRead;
 
 if(s>0)
 {
-
-
 fwrite(leftPart.c_str(),leftPart.size(),1,newFile);
 data[s]='\0';
 fwrite(data,s,1,newFile);
@@ -178,7 +181,6 @@ fwrite(rightPart.c_str(),rightPart.size(),1,newFile);
 
 strcpy(data,"response.close();\n");
 strcat(data,"}");
-
 fwrite(data,strlen(data),1,newFile);
 
 fclose(f);
