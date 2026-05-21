@@ -1,51 +1,309 @@
 #ifndef __TMWP__H
 #define __TMWP__H
+
+/**
+ * @file tmwp.h
+ * @brief Main header file for the TM Web Projector framework.
+ *
+ * This file contains the declaration of all core classes used
+ * in the TM Web Projector web framework.
+ */
+
 #include<iostream>
 #include<map>
+
 using namespace std;
+
+/**
+ * @namespace tmwp
+ * @brief Namespace containing all TM Web Projector framework classes.
+ *
+ * This namespace prevents naming conflicts and groups all
+ * framework-related components together.
+ */
 namespace tmwp
 {
+
+/**
+ * @class Request
+ * @brief Represents an HTTP request received from the client.
+ *
+ * This class stores all information related to a client request
+ * such as HTTP method, requested resource, MIME type, request data,
+ * query parameters, and forwarding information.
+ */
 class Request
 {
 public:
+
+/**
+ * @brief Stores the HTTP request method.
+ *
+ * Examples:
+ * - GET
+ * - POST
+ * - PUT
+ * - DELETE
+ */
 char *method;
+
+/**
+ * @brief Stores the requested resource path.
+ *
+ * Example:
+ * - /home
+ * - /student/add
+ */
 char *resource;
+
+/**
+ * @brief Indicates whether the requested resource is a client-side technology resource.
+ *
+ * Possible values:
+ * - 1 : Client-side resource
+ * - 0 : Server-side resource
+ *
+ * Examples:
+ * - HTML
+ * - CSS
+ * - JavaScript
+ */
 char isClientSideTechnologyResource;
+
+/**
+ * @brief Stores the MIME type of the requested resource.
+ *
+ * Examples:
+ * - text/html
+ * - text/css
+ * - application/javascript
+ */
 char *mimeType;
+
+/**
+ * @brief Total number of request data entries.
+ *
+ * This generally represents the number of parameters
+ * sent by the client.
+ */
 int dataCount;
+
+/**
+ * @brief Stores request parameter values.
+ *
+ * This is an array of character pointers containing
+ * client-submitted data.
+ */
 char **data;
+
+/**
+ * @brief Stores request key-value parameters.
+ *
+ * Used for storing query parameters or form data.
+ *
+ * Example:
+ * key = "name"
+ * value = "Kanishk"
+ */
 map<string,string> keyValues;
 
+/**
+ * @brief Stores the URL where the request should be forwarded.
+ */
 string forwardTo;
+
+/**
+ * @brief Returns the value associated with the specified key.
+ *
+ * @param name Name of the parameter.
+ *
+ * @return string Value associated with the specified key.
+ *
+ * @note If the key does not exist, an empty string may be returned.
+ */
 string get(string name);
+
+/**
+ * @brief Forwards the current request to another resource.
+ *
+ * @param forwardTo Target resource URL.
+ *
+ * @post The request forwarding path gets updated.
+ */
 void forward(string forwardTo);
 
+/**
+ * @brief Stores a key-value pair in the request object.
+ *
+ * @param k Key name.
+ * @param v Value associated with the key.
+ *
+ * @post The key-value pair is added to the request map.
+ */
 void setKeyValue(string k,string v);
+
+/**
+ * @brief Retrieves the value associated with the specified key.
+ *
+ * @param k Key name.
+ *
+ * @return string Value corresponding to the given key.
+ */
 string getValue(string k);
 };
+
+/**
+ * @class Response
+ * @brief Represents the HTTP response sent to the client.
+ *
+ * This class is responsible for sending data back to the client,
+ * creating HTTP headers, and closing the client connection.
+ */
 class Response
 {
 private:
+
+/**
+ * @brief Stores the client socket descriptor.
+ *
+ * This socket is used for communication with the client.
+ */
 int clientSocketDescriptor;
+
+/**
+ * @brief Indicates whether the response connection is closed.
+ *
+ * Possible values:
+ * - true  : Connection closed
+ * - false : Connection active
+ */
 bool isClosed;
+
+/**
+ * @brief Indicates whether the HTTP header has been created.
+ *
+ * Prevents duplicate header generation.
+ */
 bool headerCreated;
+
+/**
+ * @brief Creates the HTTP response header.
+ *
+ * This function internally generates standard HTTP headers
+ * before sending response content.
+ *
+ * @note This function is intended for internal framework use only.
+ */
 void createHeader();
+
 public:
+
+/**
+ * @brief Constructor to initialize the response object.
+ *
+ * @param clientSocketDescriptor Client socket descriptor.
+ *
+ * @pre A valid socket descriptor must be provided.
+ */
 Response(int clientSocketDescriptor);
+
+/**
+ * @brief Sends character string data to the client.
+ *
+ * @param str Character string to send.
+ *
+ * @post Data is written to the client socket.
+ */
 void write(const char *str);
+
+/**
+ * @brief Sends string object data to the client.
+ *
+ * @param str String data to send.
+ *
+ * @post Data is written to the client socket.
+ */
 void write(string str);
+
+/**
+ * @brief Closes the client connection.
+ *
+ * @post Client socket connection is terminated.
+ */
 void close();
 };
+
+/**
+ * @class TMWebProjector
+ * @brief Core web server framework class.
+ *
+ * This class manages server initialization, request handling,
+ * URL mapping, and server execution.
+ */
 class TMWebProjector
 {
 private:
+
+/**
+ * @brief Stores the port number on which the server runs.
+ */
 int portNumber;
+
+/**
+ * @brief Stores URL-to-handler function mappings.
+ *
+ * Each URL is associated with a callback function
+ * that handles incoming requests.
+ */
 map<string,void (*)(Request &,Response &)> requestMappings;
+
 public:
+
+/**
+ * @brief Constructor to initialize the web server.
+ *
+ * @param portNumber Port number for the server.
+ *
+ * @pre Port number should be valid and available.
+ */
 TMWebProjector(int portNumber);
+
+/**
+ * @brief Destructor for cleanup operations.
+ */
 ~TMWebProjector();
+
+/**
+ * @brief Starts the web server.
+ *
+ * This function begins listening for incoming client requests.
+ *
+ * @post Server starts accepting connections.
+ */
 void start();
+
+/**
+ * @brief Maps a URL to a request handling function.
+ *
+ * @param url URL path to map.
+ * @param ptrOnRequest Pointer to the request handler function.
+ *
+ * @note The handler function must accept:
+ * - Request &
+ * - Response &
+ *
+ * @code
+ * void home(Request &request,Response &response)
+ * {
+ *   response.write("Hello");
+ * }
+ *
+ * projector.onRequest("/home",home);
+ * @endcode
+ */
 void onRequest(string url,void (*ptrOnRequest)(Request &,Response &));
 };
+
 }
+
 #endif
