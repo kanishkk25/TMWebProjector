@@ -1,6 +1,3 @@
-#ifndef __TMWP__H
-#define __TMWP__H
-
 /**
  * @file tmwp.h
  * @brief Main header file for the TM Web Projector framework.
@@ -8,6 +5,9 @@
  * This file contains the declaration of all core classes used
  * in the TM Web Projector web framework.
  */
+
+#ifndef __TMWP__H
+#define __TMWP__H
 
 #include<iostream>
 #include<map>
