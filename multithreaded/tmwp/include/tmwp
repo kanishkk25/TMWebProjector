@@ -1,0 +1,80 @@
+#ifndef __TMWP__H
+#define __TMWP__H
+
+#include<iostream>
+#include<map>
+#include<thread>
+#include<set>
+using namespace std;
+namespace tmwp
+{
+class Request
+{
+public:
+char *method;
+char *resource;
+char isClientSideTechnologyResource;
+char *mimeType;
+int dataCount;
+char **data;
+
+map<string,string> keyValues;
+string forwardTo;
+string get(string name);
+void forward(string forwardTo);
+void setKeyValue(string k,string v);
+string getValue(string k);
+};
+
+class Response
+{
+private:
+int clientSocketDescriptor;
+bool isClosed;
+bool headerCreated;
+void createHeader();
+
+public:
+Response(int clientSocketDescriptor);
+void write(const char *str);
+void write(string str);
+void close();
+};
+
+class TMWebProjector
+{
+private:
+int portNumber;
+map<string,void (*)(Request &,Response &)> requestMappings;
+public:
+
+TMWebProjector(int portNumber);
+~TMWebProjector();
+void start();
+void onRequest(string url,void (*ptrOnRequest)(Request &,Response &));
+};
+
+
+class ClientSocketThread
+{
+public:
+int clientSocketDescriptor;
+thread *t;
+int done;
+ClientSocketThread(int clientSocketDescriptor)
+{
+this->clientSocketDescriptor=clientSocketDescriptor;
+this->done=-1;
+}
+
+void startThread(void (*p2f)(map<string,void (*)(Request &,Response &)> *,ClientSocketThread *),map<string,void (*)(Request &,Response &)> *requestMappings)
+{
+this->t=new thread(p2f,requestMappings,this);
+}
+~ClientSocketThread()
+{
+}
+};
+
+}
+#endif
